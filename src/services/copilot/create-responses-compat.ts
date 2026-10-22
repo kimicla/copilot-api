@@ -59,7 +59,7 @@ function contentParts(
     return [{ type: role === "assistant" ? "output_text" : "input_text", text: content }]
   }
   if (!content) return []
-  return content.flatMap((part: ContentPart) => {
+  return content.flatMap<JsonObject>((part: ContentPart) => {
     if (part.type === "text") {
       return [{ type: role === "assistant" ? "output_text" : "input_text", text: part.text }]
     }
@@ -183,7 +183,7 @@ export function responsesToChatCompletion(
         type: "function",
         function: {
           name: item.name ?? "",
-          arguments: item.arguments ?? "{}",
+          arguments: item.arguments || "{}",
         },
       })
     }
@@ -286,6 +286,7 @@ export async function* responsesEventsToChatEvents(
       const index = event.output_index
       const saved = index === undefined ? undefined : pending.get(index)
       const tool = { ...saved, ...event.item }
+      tool.arguments = event.item.arguments || saved?.arguments || "{}"
       if (index !== undefined) pending.delete(index)
       usedTools = true
       const currentIndex = toolIndex++
