@@ -5,10 +5,21 @@ import { copilotHeaders, copilotBaseUrl } from "~/lib/api-config"
 import { HTTPError } from "~/lib/error"
 import { state } from "~/lib/state"
 
+import { createResponsesAsChat } from "./create-responses-compat"
+
 export const createChatCompletions = async (
   payload: ChatCompletionsPayload,
 ) => {
   if (!state.copilotToken) throw new Error("Copilot token not found")
+
+  // Prefer the endpoints advertised by Copilot rather than guessing from names.
+  const model = state.models?.data.find((entry) => entry.id === payload.model)
+  const endpoints = model?.supported_endpoints ?? []
+  const responsesOnly = endpoints.length > 0
+    ? endpoints.includes("/responses") && !endpoints.includes("/chat/completions")
+    : payload.model === "gpt-5.6-luna"
+
+  if (responsesOnly) return createResponsesAsChat(payload)
 
   const enableVision = payload.messages.some(
     (x) =>
