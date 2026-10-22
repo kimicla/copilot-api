@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 
 import { events } from "fetch-event-stream"
 
@@ -117,7 +117,14 @@ export function chatToResponsesPayload(payload: ChatCompletionsPayload): JsonObj
   if (typeof payload.max_tokens === "number") {
     result.max_output_tokens = Math.max(16, payload.max_tokens)
   }
-  if (payload.user) result.user = payload.user
+  // The Copilot Responses endpoint limits `user` to 64 characters.
+  // Claude Code may supply much longer metadata.user_id values.
+  // Preserve short IDs and hash longer ones to a stable 64-character ID.
+  if (payload.user) {
+    result.user = Buffer.byteLength(payload.user, "utf8") <= 64
+      ? payload.user
+      : createHash("sha256").update(payload.user).digest("hex")
+  }
 
   // Reasoning models commonly reject temperature, top_p, and stop.
   // These Chat Completions options are intentionally not sent to Responses.
