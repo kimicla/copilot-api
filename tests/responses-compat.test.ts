@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 
-import type { ChatCompletionsPayload } from "../src/services/copilot/create-chat-completions"
+import type { ChatCompletionChunk, ChatCompletionsPayload } from "../src/services/copilot/create-chat-completions"
 
 import { translateToOpenAI, translateToAnthropic } from "../src/routes/messages/non-stream-translation"
 import { translateChunkToAnthropicEvents } from "../src/routes/messages/stream-translation"
@@ -114,7 +114,7 @@ describe("Copilot Responses compatibility", () => {
       ]) yield { data: JSON.stringify(item) }
     }
 
-    const chatEvents: Array<Record<string, unknown>> = []
+    const chatEvents: ChatCompletionChunk[] = []
     const anthropicEvents: string[] = []
     const state: AnthropicStreamState = {
       messageStartSent: false,
@@ -124,7 +124,7 @@ describe("Copilot Responses compatibility", () => {
     }
     for await (const raw of responsesEventsToChatEvents(source(), model)) {
       if (raw.data === "[DONE]") continue
-      const chunk = JSON.parse(raw.data)
+      const chunk = JSON.parse(raw.data) as ChatCompletionChunk
       chatEvents.push(chunk)
       for (const event of translateChunkToAnthropicEvents(chunk, state)) {
         anthropicEvents.push(event.type)
