@@ -128,6 +128,7 @@ describe("Copilot Responses compatibility", () => {
       chatEvents.push(chunk)
       for (const event of translateChunkToAnthropicEvents(chunk, state)) {
         anthropicEvents.push(event.type)
+        if (event.type === "content_block_delta") anthropicEvents.push(event.delta.type)
       }
     }
     expect(chatEvents.at(-1)?.choices).toBeDefined()
