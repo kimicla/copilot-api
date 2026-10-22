@@ -278,6 +278,27 @@ The dashboard provides a user-friendly interface to view your Copilot usage data
 - **URL-based Configuration**: You can also specify the API endpoint directly in the URL using a query parameter. This is useful for bookmarks or sharing links. For example:
   `https://ericc-ch.github.io/copilot-api?endpoint=http://your-api-server/usage`
 
+## Responses-only models in Claude Code
+
+This fork can route Copilot models that advertise `/responses` but not
+`/chat/completions` through a Responses-to-Chat-Completions bridge.
+Claude Code continues to use the existing Anthropic `/v1/messages` API,
+including text streaming and function calling. When endpoint metadata is
+unavailable, `gpt-5.6-luna` is explicitly routed through the bridge.
+
+To run the local source checkout:
+
+```sh
+bun install
+bun run start --claude-code
+```
+
+Select `gpt-5.6-luna` when prompted if the model is available in your Copilot
+model list. A GitHub Copilot subscription and entitlement to the selected
+model are still required. The proxy cannot unlock unavailable models.
+Responses-only support is implemented at the Anthropic and Chat Completions
+compatibility layers; this change does not add a public `/v1/responses` endpoint.
+
 ## Using with Claude Code
 
 This proxy can be used to power [Claude Code](https://docs.anthropic.com/en/claude-code), an experimental conversational AI assistant for developers from Anthropic.

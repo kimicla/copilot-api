@@ -41,6 +41,7 @@ interface ModelCapabilities {
 
 export interface Model {
   capabilities: ModelCapabilities
+  supported_endpoints?: string[]
   id: string
   model_picker_enabled: boolean
   name: string
