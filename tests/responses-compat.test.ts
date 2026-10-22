@@ -53,6 +53,41 @@ describe("Copilot Responses compatibility", () => {
     }])
   })
 
+  test("keeps short user IDs unchanged for Responses requests", () => {
+    const payload: ChatCompletionsPayload = {
+      model,
+      user: "claude-session-123",
+      messages: [{ role: "user", content: "hi" }],
+    }
+    expect(chatToResponsesPayload(payload).user).toBe("claude-session-123")
+  })
+
+  test("hashes Claude Code user IDs that exceed the 64-character limit", () => {
+    const longUserId = "session-".repeat(19)
+    expect(longUserId.length).toBeGreaterThan(64)
+
+    const payload: ChatCompletionsPayload = {
+      model,
+      user: longUserId,
+      messages: [{ role: "user", content: "hi" }],
+    }
+    const first = chatToResponsesPayload(payload).user
+    const second = chatToResponsesPayload(payload).user
+    expect(first).toBe(second)
+    expect(typeof first).toBe("string")
+    expect(first).toMatch(/^[a-f0-9]{64}$/)
+    expect(first).not.toBe(longUserId)
+  })
+
+  test("normalizes non-ASCII user IDs by UTF-8 length", () => {
+    const payload: ChatCompletionsPayload = {
+      model,
+      user: "测试用户".repeat(20),
+      messages: [{ role: "user", content: "hi" }],
+    }
+    expect(chatToResponsesPayload(payload).user).toMatch(/^[a-f0-9]{64}$/)
+  })
+
   test("converts image messages without stripping media", () => {
     const payload: ChatCompletionsPayload = {
       model, messages: [{ role: "user", content: [
