@@ -117,6 +117,10 @@ export async function runServer(options: RunServerOptions): Promise<void> {
   serve({
     fetch: server.fetch as ServerHandler,
     port: options.port,
+    // Model reasoning can leave streaming requests idle for longer than 10 seconds.
+    bun: {
+      idleTimeout: 0,
+    },
   })
 }
 
